@@ -1,5 +1,6 @@
+import { useEffect, useCallback } from 'react';
 import { useState, useRef } from 'react';
-
+import axios  from 'axios';
 const ProgressIndicator = ({ currentStep }) => {
   const steps = [
     { number: 1, label: 'Visual Proof', sub: 'Capture evidence' },
@@ -72,26 +73,131 @@ const ReportIssue = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [municipalities , setMunicipalities] = useState([])
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     pinCode: '',
     municipality: '',
     address: '',
+    location: '',
   });
-  const fileInputRef = useRef(null);
 
-  const handleImageCapture = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCapturedImage(reader.result);
-        setCurrentStep(2);
-      };
-      reader.readAsDataURL(file);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // Start the camera stream
+  const startCamera = useCallback(async () => {
+    setCameraError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraActive(true);
+    } catch (err) {
+      console.error('Camera access error:', err);
+      if (err.name === 'NotAllowedError') {
+        setCameraError('Camera permission denied. Please allow camera access in your browser settings.');
+      } else if (err.name === 'NotFoundError') {
+        setCameraError('No camera found on this device.');
+      } else {
+        setCameraError('Unable to access camera. Please try again.');
+      }
     }
+  }, []);
+
+  // Stop the camera stream
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setCameraActive(false);
+  }, []);
+
+  // Capture a frame from the live video
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    setCapturedImage(imageData);
+    stopCamera();
+    setCurrentStep(2);
   };
+
+  // Start camera on mount, stop on unmount
+  useEffect(() => {
+    if (!capturedImage) {
+      startCamera();
+    }
+    return () => stopCamera();
+  }, [capturedImage, startCamera, stopCamera]);
+
+  const fetchCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationError('');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          // Reverse geocode using OpenStreetMap Nominatim (free, no API key needed)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await response.json();
+          const readableAddress = data.display_name || `${latitude}, ${longitude}`;
+          setFormData((prev) => ({ ...prev, location: readableAddress }));
+        } catch {
+          // If reverse geocoding fails, fall back to raw coordinates
+          setFormData((prev) => ({ ...prev, location: `${latitude}, ${longitude}` }));
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (error) => {
+        setLocationLoading(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError('Location permission denied. Please allow access in your browser settings.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setLocationError('Location information is unavailable.');
+            break;
+          case error.TIMEOUT:
+            setLocationError('Location request timed out. Please try again.');
+            break;
+          default:
+            setLocationError('An unknown error occurred.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -109,6 +215,30 @@ const ReportIssue = () => {
     setCurrentStep(3);
     setShowSuccess(true);
   };
+
+
+  useEffect(() => {
+    if (formData.pinCode.length !== 6) {
+      setMunicipalities([]);
+      return;
+    }
+
+    const fetchMunicipalities = async () => {
+      try {
+        const { data } = await axios.get(`https://api.postalpincode.in/pincode/${formData.pinCode}`);
+        if (data?.[0]?.Status === 'Success' && data[0].PostOffice) {
+          setMunicipalities(data[0].PostOffice);
+        } else {
+          setMunicipalities([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch municipalities:', err);
+        setMunicipalities([]);
+      }
+    };
+
+    fetchMunicipalities();
+  }, [formData.pinCode]);
 
   return (
     <div className="bg-surface min-h-screen">
@@ -144,22 +274,38 @@ const ReportIssue = () => {
                     src={capturedImage}
                   />
                 ) : (
-                  <img
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
-                    alt="Camera viewfinder showing a cracked city sidewalk"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3s0scZthlsB8SugEZG0590vDs1bMwYT_W81ZQ9pzqeED3n3WLUnuFqzP_NUdsAAgqIrzdP95NTnJRqcNZfZnKZ-RmkSK7wv4VG5fXSn0D08WoroBI_hhKRBPWzSMt4D-wwODlqBpI2KHoPArvAfRM8PwdntCy1s6hFjMDgNUKeOH0j90kX2rIwut8p9ANkZzFS9pg1YODk118eJS3zSx_DS8mwYo1gONfu6EK-6mOHcmwLto9F-JYWnHnFB1XvXx6aoq0VR8pdGw"
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
                   />
                 )}
 
+                {/* Camera Error */}
+                {cameraError && !capturedImage && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-6 text-center">
+                    <span className="material-symbols-outlined text-error text-5xl mb-4">videocam_off</span>
+                    <p className="text-white text-sm mb-4">{cameraError}</p>
+                    <button
+                      onClick={startCamera}
+                      className="bg-primary text-on-primary px-6 py-3 rounded-full font-bold text-sm active:scale-95 transition-transform"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+
                 {/* Camera Overlay */}
-                {!capturedImage && (
+                {!capturedImage && cameraActive && (
                   <>
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-48 h-48 border border-white/30 rounded-full border-dashed animate-pulse"></div>
                     </div>
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-6 flex flex-col items-center gap-4">
                       <button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={capturePhoto}
                         className="w-20 h-20 rounded-full border-4 border-white/40 p-1 active:scale-95 transition-transform"
                       >
                         <div className="w-full h-full bg-white rounded-full flex items-center justify-center shadow-2xl">
@@ -188,14 +334,8 @@ const ReportIssue = () => {
                 )}
               </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={handleImageCapture}
-              />
+              {/* Hidden canvas for capturing snapshots */}
+              <canvas ref={canvasRef} className="hidden" />
 
               <div className="mt-6 flex items-start gap-3 p-4 bg-primary-fixed text-on-primary-fixed-variant rounded-2xl">
                 <span className="material-symbols-outlined text-sm mt-0.5">info</span>
@@ -260,23 +400,64 @@ const ReportIssue = () => {
                     <label className="block font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">
                       Municipality
                     </label>
-                    {formData.municipality ? (
-                      <div className="w-full px-5 py-4 bg-secondary-fixed/10 rounded-2xl text-on-surface flex items-center justify-between">
-                        <span className="text-sm font-semibold">{formData.municipality}</span>
-                        <span className="material-symbols-outlined text-secondary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                      </div>
+                    {municipalities.length > 0 ? (
+                      <select
+                        name="municipality"
+                        id="municipality"
+                        className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl text-on-surface focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                        value={formData.municipality}
+                        onChange={(e) => handleInputChange('municipality', e.target.value)}
+                      >
+                        <option value="">Select Municipality</option>
+                        {municipalities
+                          .filter((item, index, self) => 
+                            item.Block && self.findIndex(i => i.Block === item.Block) === index
+                          )
+                          .map((item, index) => (
+                            <option key={index} value={item.Block}>
+                              {item.Block}
+                            </option>
+                          ))}
+                      </select>
                     ) : (
                       <div className="w-full px-5 py-4 bg-surface-dim/40 rounded-2xl text-on-surface-variant flex items-center justify-between">
                         <span className="text-sm font-semibold italic">
-                          {formData.pinCode.length >= 3 ? 'Auto-fetching...' : 'Enter PIN first'}
+                          {formData.pinCode.length >= 3 ? 'Enter full 6-digit PIN' : 'Enter PIN first'}
                         </span>
-                        {formData.pinCode.length >= 3 && (
-                          <span className="material-symbols-outlined text-primary text-sm animate-spin">sync</span>
-                        )}
                       </div>
                     )}
                   </div>
                 </div>
+
+                  <div className="space-y-2">
+                  <label className="block font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">
+                    Location
+                  </label>
+                  <div className="relative">
+                    <input
+                      className="w-full px-5 py-4 pr-14 bg-surface-container-low border-none rounded-2xl text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="Enter location or use GPS"
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={fetchCurrentLocation}
+                      disabled={locationLoading}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-all active:scale-90 disabled:opacity-50"
+                      title="Use current location"
+                    >
+                      <span className={`material-symbols-outlined text-primary text-xl ${locationLoading ? 'animate-spin' : ''}`}>
+                        {locationLoading ? 'sync' : 'my_location'}
+                      </span>
+                    </button>
+                  </div>
+                  {locationError && (
+                    <p className="text-xs text-error ml-1 mt-1">{locationError}</p>
+                  )}
+                </div>
+
 
                 {/* Address */}
                 <div className="space-y-2">
