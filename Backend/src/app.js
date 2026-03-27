@@ -8,6 +8,8 @@ app.use(express.json())
 
 
 
-
+app.get('/', (req, res) => {
+    res.send("Hellooooouuuuuuu")
+})
 
 module.exports = app
