@@ -33,7 +33,9 @@ const reportSchema = new mongoose.Schema(
 
         // Spatial/Location
         location: {
-            address: { type: String },
+            address: { type: String }, 
+            latitude: { type: Number, required: true },
+            longitude: { type: Number, required: true },
         },
 
         // Management Data
@@ -46,7 +48,7 @@ const reportSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Optional: Geospatial indexing for location-based queries in the future
+
 reportSchema.index({ "location.latitude": 1, "location.longitude": 1 });
 
 const Report = mongoose.model("Report", reportSchema);
