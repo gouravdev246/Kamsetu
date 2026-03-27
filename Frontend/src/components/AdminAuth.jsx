@@ -5,6 +5,8 @@ const AdminAuth = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [municipalities, setMunicipalities] = useState([]);
   
   // Registration State
@@ -50,6 +52,25 @@ const AdminAuth = ({ onAuthSuccess }) => {
     password: '',
     otp: ''
   });
+
+  // Send OTP handler
+  const handleSendOTP = async (email) => {
+    if (!email) {
+      setError('Please enter your email first.');
+      return;
+    }
+    setOtpLoading(true);
+    setError('');
+    try {
+      await axios.post('/api/auth/send-otp', { email });
+      setOtpSent(true);
+      setTimeout(() => setOtpSent(false), 30000); // 30s reset
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send OTP.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -103,14 +124,24 @@ const AdminAuth = ({ onAuthSuccess }) => {
             <div className="grid grid-cols-1 gap-5">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Email Address</label>
-                <input 
-                  type="email" 
-                  className="w-full px-6 py-4 bg-surface-container-low border-none rounded-2xl text-on-surface focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="admin@municipality.gov"
-                  value={loginForm.email}
-                  onChange={e => setLoginForm({...loginForm, email: e.target.value})}
-                  required
-                />
+                <div className="relative">
+                  <input 
+                    type="email" 
+                    className="w-full px-6 py-4 bg-surface-container-low border-none rounded-2xl text-on-surface focus:ring-2 focus:ring-primary/20 transition-all pr-24"
+                    placeholder="admin@municipality.gov"
+                    value={loginForm.email}
+                    onChange={e => setLoginForm({...loginForm, email: e.target.value})}
+                    required
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => handleSendOTP(loginForm.email)}
+                    disabled={otpLoading || otpSent}
+                    className="absolute right-2 top-2 bottom-2 px-4 bg-primary text-on-primary rounded-xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 disabled:opacity-50"
+                  >
+                    {otpSent ? 'Sent' : otpLoading ? '•••' : 'Send'}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Password</label>
@@ -162,14 +193,24 @@ const AdminAuth = ({ onAuthSuccess }) => {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Official Email</label>
-                <input 
-                  type="email" 
-                  className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl text-on-surface focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="admin@gov.in"
-                  value={regForm.email}
-                  onChange={e => setRegForm({...regForm, email: e.target.value})}
-                  required
-                />
+                <div className="relative">
+                  <input 
+                    type="email" 
+                    className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl text-on-surface focus:ring-2 focus:ring-primary/20 transition-all pr-24"
+                    placeholder="admin@gov.in"
+                    value={regForm.email}
+                    onChange={e => setRegForm({...regForm, email: e.target.value})}
+                    required
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => handleSendOTP(regForm.email)}
+                    disabled={otpLoading || otpSent}
+                    className="absolute right-2 top-2 bottom-2 px-4 bg-secondary-fixed text-on-secondary-fixed rounded-xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 disabled:opacity-50"
+                  >
+                    {otpSent ? 'Sent' : otpLoading ? '•••' : 'Send'}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Phone Number</label>

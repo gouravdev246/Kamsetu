@@ -8,6 +8,33 @@ const Admin = require('../models/admin.model');
 
 // ADMIN AUTH CONTROLLERS
 
+const sendOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        // Generate 4-digit random OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        
+        // Save OTP to database (overwrite if exists)
+        await OTP.findOneAndUpdate(
+            { email },
+            { otp, createdAt: new Date() },
+            { upsert: true, new: true }
+        );
+
+        console.log(`[OTP DEBUG] OTP for ${email}: ${otp}`);
+
+        // In a real app, send actual email here
+        return res.status(200).json({ message: "OTP sent successfully" });
+    } catch (err) {
+        console.log("Error", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
 const registerAdmin = async (req, res) => {
     try {
         const { name, email, password, phone, address, organisation, pincode } = req.body;

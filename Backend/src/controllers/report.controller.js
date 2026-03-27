@@ -39,9 +39,38 @@ const createReport = async (req, res) => {
             report: newReport,
         });
     } catch (error) {
-        console.error("Report Creation Error:", error);
-        return res.status(500).json({ message: "Internal Server Error", error: error.message });
+        console.log("Error", error);
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 }
 
-module.exports = createReport;
+const updateReportStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['Pending', 'Resolved', 'In Progress'].includes(status)) {
+            return res.status(400).json({ message: "Invalid status value" });
+        }
+
+        const updatedReport = await Report.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true }
+        );
+
+        if (!updatedReport) {
+            return res.status(404).json({ message: "Report not found" });
+        }
+
+        return res.status(200).json({
+            message: "Report status updated successfully",
+            report: updatedReport,
+        });
+    } catch (error) {
+        console.log("Status Update Error:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+module.exports = { createReport, updateReportStatus };

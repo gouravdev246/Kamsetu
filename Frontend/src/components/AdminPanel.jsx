@@ -43,9 +43,13 @@ const AdminPanel = () => {
   };
 
   const handleStatusChange = async (reportId, newStatus) => {
-    // This would require a status update API on backend - for now we'll just mock local state
-    setReports(prev => prev.map(r => r._id === reportId ? { ...r, status: newStatus } : r));
-    // Option: call backend here
+    try {
+      await axios.patch(`/api/report/status/${reportId}`, { status: newStatus });
+      setReports(prev => prev.map(r => r._id === reportId ? { ...r, status: newStatus } : r));
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      setError('Could not update status. Please try again.');
+    }
   };
 
   if (!isAdmin) {
