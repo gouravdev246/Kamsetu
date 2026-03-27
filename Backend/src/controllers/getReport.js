@@ -3,7 +3,14 @@ const Report = require("../models/report.model");
 
 const allReport = async (req, res) => {
     try {
-        const reports = await Report.find();
+        const { municipality } = req.query;
+        let query = {};
+        
+        if (municipality) {
+            query.municipality = municipality;
+        }
+
+        const reports = await Report.find(query).sort({ createdAt: -1 });
         return res.status(200).json({
             message: "Reports fetched successfully",
             reports,

@@ -10,6 +10,7 @@ import MobileNav from './components/MobileNav'
 import MunicipalityRanks from './components/MunicipalityRanks'
 import ReportIssue from './components/ReportIssue'
 import TopContributors from './components/TopContributors'
+import AdminPanel from './components/AdminPanel'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -22,6 +23,8 @@ function App() {
         return <ReportIssue />;
       case 'contributors':
         return <TopContributors />;
+      case 'admin':
+        return <AdminPanel />;
       default:
         return (
           <main className="pt-20 pb-24 md:pb-0">

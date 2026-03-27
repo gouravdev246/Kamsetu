@@ -25,6 +25,11 @@ const reportSchema = new mongoose.Schema(
             required: true,
             enum: ["Pothole", "Garbage", "Drainage", "Water Leakage", "Broken Road", "Other"],
         },
+        municipality: {
+            type: String,
+            required: true,
+            index: true,
+        },
         
         // Media (Images or Videos of the issue)
         media: [{

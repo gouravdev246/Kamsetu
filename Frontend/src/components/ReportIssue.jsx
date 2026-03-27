@@ -85,7 +85,11 @@ const ReportIssue = () => {
     municipality: '',
     address: '',
     location: '',
+    lat: null,
+    lng: null,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState('');
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -169,10 +173,20 @@ const ReportIssue = () => {
           );
           const data = await response.json();
           const readableAddress = data.display_name || `${latitude}, ${longitude}`;
-          setFormData((prev) => ({ ...prev, location: readableAddress }));
+          setFormData((prev) => ({ 
+            ...prev, 
+            location: readableAddress,
+            lat: latitude,
+            lng: longitude,
+          }));
         } catch {
           // If reverse geocoding fails, fall back to raw coordinates
-          setFormData((prev) => ({ ...prev, location: `${latitude}, ${longitude}` }));
+          setFormData((prev) => ({ 
+            ...prev, 
+            location: `${latitude}, ${longitude}`,
+            lat: latitude,
+            lng: longitude,
+          }));
         } finally {
           setLocationLoading(false);
         }
@@ -210,10 +224,34 @@ const ReportIssue = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setCurrentStep(3);
-    setShowSuccess(true);
+    if (!capturedImage) {
+      setSubmissionError('Please capture/upload an image first.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmissionError('');
+
+    try {
+      const payload = {
+        ...formData,
+        capturedImage, // the base64 string
+      };
+
+      const response = await axios.post('/api/report/create', payload);
+      
+      if (response.status === 201) {
+        setCurrentStep(3);
+        setShowSuccess(true);
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      setSubmissionError(error.response?.data?.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
 
@@ -476,11 +514,24 @@ const ReportIssue = () => {
                 {/* Submit */}
                 <button
                   type="submit"
-                  className="w-full py-5 bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-extrabold text-lg rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4"
+                  disabled={isSubmitting}
+                  className="w-full py-5 bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-extrabold text-lg rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4 disabled:opacity-70"
                 >
-                  Submit Report
-                  <span className="material-symbols-outlined">send</span>
+                  {isSubmitting ? (
+                    <>
+                      Submitting...
+                      <span className="material-symbols-outlined animate-spin">sync</span>
+                    </>
+                  ) : (
+                    <>
+                      Submit Report
+                      <span className="material-symbols-outlined">send</span>
+                    </>
+                  )}
                 </button>
+                {submissionError && (
+                  <p className="text-center text-error font-medium text-sm mt-2">{submissionError}</p>
+                )}
               </form>
             </div>
 
