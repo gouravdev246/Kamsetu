@@ -141,7 +141,97 @@ const loginAdmin = async (req, res) => {
     }
 };
 
+const User = require('../models/user.model');
+
+// CITIZEN/USER AUTH CONTROLLERS
+
+const registerUser = async (req, res) => {
+    try {
+        const { name, phone, password, address } = req.body;
+        
+        const existingUser = await User.findOne({ phone });
+        if (existingUser) {
+            return res.status(400).json({ message: "Mobile number already registered" });
+        }
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const newUser = await User.create({
+            name,
+            phone,
+            password: hashedPassword,
+            address
+        });
+        
+        const token = jwt.sign({
+            id: newUser._id,
+            role: 'user'
+        }, process.env.JWT_SECRET);
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            partitioned: true
+        });
+        
+        newUser.password = undefined; 
+        return res.status(201).json({
+            message: "Citizen registered successfully on Kamsetu",
+            user: newUser
+        });
+    } catch (err) {
+        console.log("User Register Error:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+const loginUser = async (req, res) => {
+    try {
+        const { phone, password } = req.body;
+        
+        if (!phone || !password) {
+            return res.status(400).json({ message: "Mobile number and password are required" });
+        }
+        
+        const user = await User.findOne({ phone });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+        
+        const token = jwt.sign({
+            id: user._id,
+            role: 'user'
+        }, process.env.JWT_SECRET);
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            partitioned: true
+        });
+
+        user.password = undefined;
+        res.status(200).json({
+            message: "Logged in successfully",
+            user: user
+        });
+    } catch (err) {
+        console.log("User Login Error:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
 module.exports = { 
     registerAdmin,
-    loginAdmin
+    loginAdmin,
+    registerUser,
+    loginUser
 };

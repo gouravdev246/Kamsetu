@@ -43,6 +43,21 @@ const reportSchema = new mongoose.Schema(
             longitude: { type: Number, required: true },
         },
 
+        // AI & Priority Data
+        priority: {
+            type: String,
+            enum: ["High", "Medium", "Low"],
+            default: "Medium",
+        },
+        aiRecommendation: {
+            type: String,
+            default: "Review and assess criticality.",
+        },
+        publicUpdate: {
+            type: String,
+            default: "Your report has been received and is currently under primary assessment by municipal authorities.",
+        },
+
         // Management Data
         status: {
             type: String,

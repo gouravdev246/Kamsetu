@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const Navbar = ({ currentPage, setCurrentPage }) => {
+const Navbar = ({ currentPage, setCurrentPage, user, admin }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -48,7 +48,7 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
               }}
               className={`font-headline font-bold text-sm tracking-tight transition-colors cursor-pointer ${
                 currentPage === link.id
-                  ? 'text-blue-700 border-b-2 border-blue-600 pb-1'
+                  ? 'text-primary border-b-2 border-primary pb-1'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
               href={link.href}
@@ -67,8 +67,25 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
             <span className="material-symbols-outlined text-lg">add_circle</span>
             Report
           </button>
-          <button className="p-2 rounded-lg hover:bg-slate-50 transition-all active:scale-95 duration-200">
-            <span className="material-symbols-outlined text-on-surface-variant">account_circle</span>
+          
+          {/* Auth Display */}
+          <button 
+            onClick={() => {
+              if (!user && !admin) setCurrentPage('login');
+              // Optionally handle profile menu here
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all active:scale-95 ${
+              (user || admin) 
+                ? 'bg-secondary-fixed/10 border-secondary-fixed text-secondary-fixed' 
+                : 'bg-on-surface/5 border-on-surface/10 text-on-surface-variant hover:bg-on-surface/10'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">
+              {admin ? 'verified_user' : user ? 'person' : 'account_circle'}
+            </span>
+            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">
+              {admin ? 'Authority' : user ? user.name.split(' ')[0] : 'Authenticate'}
+            </span>
           </button>
 
           {/* Mobile menu toggle */}
@@ -96,7 +113,7 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
                   setMobileMenuOpen(false);
                 }}
                 className={`block py-2 font-headline font-bold text-sm cursor-pointer ${
-                  currentPage === link.id ? 'text-blue-700' : 'text-slate-600'
+                  currentPage === link.id ? 'text-primary' : 'text-slate-600'
                 }`}
                 href={link.href}
               >

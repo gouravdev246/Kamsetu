@@ -124,8 +124,21 @@ const AdminPanel = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {reports.map((report) => (
-                <div key={report._id} className="bg-surface-container-lowest rounded-3xl overflow-hidden border border-outline-variant/20 shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
+              {reports
+                .sort((a, b) => {
+                  const pMap = { High: 0, Medium: 1, Low: 2 };
+                  return pMap[a.priority || 'Medium'] - pMap[b.priority || 'Medium'];
+                })
+                .map((report) => (
+                <div key={report._id} className={`bg-surface-container-lowest rounded-3xl overflow-hidden border ${report.priority === 'High' ? 'border-error/30 shadow-error/5 ring-1 ring-error/10' : 'border-outline-variant/20'} shadow-sm hover:shadow-md transition-all group flex flex-col h-full relative`}>
+                  {report.priority === 'High' && (
+                    <div className="absolute top-4 right-4 z-20">
+                      <div className="bg-error text-on-error px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-lg">
+                        <span className="material-symbols-outlined text-xs">warning</span> Safety Hazard
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="relative aspect-video bg-on-background overflow-hidden">
                     {report.media && report.media[0] ? (
                       <img src={report.media[0]} className="w-full h-full object-cover" alt={report.title} />
@@ -136,7 +149,9 @@ const AdminPanel = () => {
                     )}
                     <div className="absolute top-4 left-4">
                       <span className={`px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest border-2 shadow-sm ${
-                        report.status === 'Pending' ? 'bg-primary-container text-on-primary-container border-primary/20' : 'bg-secondary-fixed text-on-secondary-fixed border-secondary/20'
+                        report.status === 'Pending' ? 'bg-primary-container text-on-primary-container border-primary/20' : 
+                        report.status === 'In Progress' ? 'bg-amber-100 text-amber-900 border-amber-200' :
+                        'bg-secondary-fixed text-on-secondary-fixed border-secondary/20'
                       }`}>
                         {report.status}
                       </span>
@@ -145,26 +160,61 @@ const AdminPanel = () => {
                   
                   <div className="p-6 flex-1 flex flex-col">
                     <div className="flex items-center gap-2 mb-3">
-                       <span className="material-symbols-outlined text-primary-container text-sm bg-primary p-1 rounded-full overflow-hidden">category</span>
-                       <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{report.category}</span>
+                       <span className="material-symbols-outlined text-primary-container text-sm bg-primary p-1 rounded-full overflow-hidden">smart_toy</span>
+                       <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{report.priority} PRIORITY DIRECTIVE</span>
                     </div>
-                    <h3 className="font-headline font-extrabold text-xl leading-snug mb-2 group-hover:text-primary transition-colors">{report.title}</h3>
-                    <p className="text-on-surface-variant text-sm line-clamp-3 mb-6 flex-1">{report.description}</p>
                     
-                    <div className="pt-6 border-t border-outline-variant/20 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-on-surface-variant text-sm">schedule</span>
-                        <span className="text-xs font-medium text-on-surface-variant">{new Date(report.createdAt).toLocaleDateString()}</span>
+                    <h3 className="font-headline font-extrabold text-xl leading-snug mb-2 group-hover:text-primary transition-colors">{report.title}</h3>
+                    <p className="text-on-surface-variant text-sm line-clamp-2 mb-4 italic">"{report.description}"</p>
+                    
+                    {/* AI Recommendation Box */}
+                    <div className="bg-primary/5 p-4 rounded-2xl mb-6 border border-primary/10">
+                       <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-black uppercase text-primary tracking-widest">AI Action Suggestion</span>
+                       </div>
+                       <p className="text-xs font-bold text-on-surface italic leading-relaxed">
+                         {report.aiRecommendation || 'Assess urgency and dispatch personnel.'}
+                       </p>
+                    </div>
+                    
+                    <div className="mt-auto pt-6 border-t border-outline-variant/20 flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                           <span className="material-symbols-outlined text-on-surface-variant text-sm">schedule</span>
+                           <span className="text-xs font-medium text-on-surface-variant">{new Date(report.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex gap-2">
+                           <button 
+                              title="Mark In Progress"
+                              onClick={() => handleStatusChange(report._id, 'In Progress')}
+                              disabled={report.status === 'In Progress' || report.status === 'Resolved'}
+                              className={`w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center hover:scale-105 transition-transform active:scale-95 disabled:opacity-20 disabled:scale-100 shadow-lg shadow-primary-container/20`}
+                           >
+                             <span className="material-symbols-outlined text-xl">engineering</span>
+                           </button>
+                           <button 
+                              title="Resolve Issue"
+                              onClick={() => handleStatusChange(report._id, 'Resolved')}
+                              disabled={report.status === 'Resolved'}
+                              className={`w-10 h-10 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center hover:scale-105 transition-transform active:scale-95 disabled:opacity-20 disabled:scale-100 shadow-lg shadow-secondary-fixed/30`}
+                           >
+                             <span className="material-symbols-outlined text-xl">check</span>
+                           </button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                         <button 
-                            title="Resolve Issue"
-                            onClick={() => handleStatusChange(report._id, 'Resolved')}
-                            className="w-10 h-10 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-secondary-fixed/30"
-                         >
-                           <span className="material-symbols-outlined text-xl">check</span>
-                         </button>
-                      </div>
+
+                      {/* AI Public Transparency Log */}
+                      {report.publicUpdate && (
+                        <div className="p-3 bg-surface-container-high rounded-xl border border-outline-variant/30">
+                           <div className="flex items-center gap-1.5 mb-1.5">
+                              <span className="material-symbols-outlined text-[10px] text-primary font-bold animate-pulse">broadcast_on_home</span>
+                              <span className="text-[10px] font-black uppercase text-on-surface-variant/70 tracking-tighter">AI Public Update</span>
+                           </div>
+                           <p className="text-[10px] font-bold text-on-surface-variant italic leading-tight">
+                             {report.publicUpdate}
+                           </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
