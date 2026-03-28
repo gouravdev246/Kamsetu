@@ -1,4 +1,24 @@
+import { useState, useEffect } from 'react';
+
 const HeroSection = ({ setCurrentPage }) => {
+  const [liveReports, setLiveReports] = useState([]);
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/report/all");
+        const json = await response.json();
+        if (json.reports) {
+          // get latest 2
+          setLiveReports(json.reports.slice(0, 2));
+        }
+      } catch (err) {
+        console.error("Failed to fetch live reports", err);
+      }
+    };
+    fetchLatest();
+  }, []);
+
   return (
     <section className="relative min-h-[870px] flex items-center px-6 overflow-hidden">
       {/* Background Image */}
@@ -53,35 +73,36 @@ const HeroSection = ({ setCurrentPage }) => {
               Live
             </div>
           </div>
+          
           <div className="space-y-6">
-            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-colors duration-300">
-              <div className="w-12 h-12 rounded-xl bg-primary-fixed/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary-fixed">
-                  location_on
-                </span>
+            {liveReports.length > 0 ? (
+              liveReports.map((report, idx) => (
+                <div key={idx} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-colors duration-300">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${report.status === 'Resolved' ? 'bg-secondary-fixed/20' : 'bg-primary-fixed/20'}`}>
+                    <span className={`material-symbols-outlined ${report.status === 'Resolved' ? 'text-secondary-fixed' : 'text-primary-fixed'}`}>
+                      {report.status === 'Resolved' ? 'check_circle' : 'location_on'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-white font-bold">{report.status === 'Resolved' ? 'Resolved:' : 'New:'} {report.title}</p>
+                    <p className="text-white/60 text-sm">
+                      {report.category} • Just now
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Fallback skeleton if no database reports exist yet
+              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-colors duration-300 opacity-50">
+                <div className="w-12 h-12 rounded-xl bg-primary-fixed/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary-fixed">hourglass_empty</span>
+                </div>
+                <div>
+                  <p className="text-white font-bold">Awaiting new reports...</p>
+                  <p className="text-white/60 text-sm">Data will appear live</p>
+                </div>
               </div>
-              <div>
-                <p className="text-white font-bold">New Report: Pothole Repair</p>
-                <p className="text-white/60 text-sm">
-                  Downtown District • 2 mins ago
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-colors duration-300">
-              <div className="w-12 h-12 rounded-xl bg-secondary-fixed/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-secondary-fixed">
-                  check_circle
-                </span>
-              </div>
-              <div>
-                <p className="text-white font-bold">
-                  Issue Resolved: Street Light
-                </p>
-                <p className="text-white/60 text-sm">
-                  North Side • 15 mins ago
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
