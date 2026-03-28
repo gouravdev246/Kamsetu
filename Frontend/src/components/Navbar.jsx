@@ -17,6 +17,7 @@ const Navbar = ({ currentPage, setCurrentPage, user, admin, onUserLogout, onAdmi
     { label: 'Report Issue', id: 'report', href: '#report' },
     { label: 'Leaderboard', id: 'leaderboard', href: '#leaderboard' },
     { label: 'Contributors', id: 'contributors', href: '#contributors' },
+    { label: 'Assistance', id: 'assistance', href: '#assistance' },
     { label: 'Portal', id: 'admin', href: '#portal' },
   ];
 

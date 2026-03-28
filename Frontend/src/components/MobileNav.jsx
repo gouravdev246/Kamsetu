@@ -11,6 +11,7 @@ const MobileNav = ({ currentPage, setCurrentPage, user, admin }) => {
     { icon: 'home', label: 'Home', id: 'home', href: '#' },
     { icon: 'add_circle', label: 'Report', id: 'report', href: '#report' },
     { icon: 'leaderboard', label: 'Ranks', id: 'leaderboard', href: '#leaderboard' },
+    { icon: 'support_agent', label: 'Assistance', id: 'assistance', href: '#assistance' },
     { icon: profileLink.icon, label: profileLink.label, id: profileLink.id, href: `#${profileLink.id}` },
   ];
 
