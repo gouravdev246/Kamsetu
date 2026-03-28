@@ -39,26 +39,47 @@ const AnimatedCounter = ({ end, duration = 2000, suffix = '' }) => {
 };
 
 const StatsSection = () => {
+  const [data, setData] = useState({
+    totalIssues: 0,
+    resolvedIssues: 0,
+    activeCitizens: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/report/global-stats");
+        const json = await response.json();
+        if (json.success) {
+          setData(json.stats);
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+    fetchStats();
+  }, []);
+
   const stats = [
     {
       icon: 'analytics',
       label: 'Total Issues Reported',
-      value: 1452,
+      value: data.totalIssues,
       iconBg: 'bg-primary-container/10',
       iconColor: 'text-primary',
     },
     {
       icon: 'verified',
       label: 'Resolved Matters',
-      value: 984,
+      value: data.resolvedIssues,
       iconBg: 'bg-secondary-container/20',
       iconColor: 'text-secondary',
-      progress: 68,
+      progress: data.totalIssues > 0 ? Math.round((data.resolvedIssues / data.totalIssues) * 100) : 0,
     },
     {
       icon: 'group',
       label: 'Active Citizens',
-      value: 4200,
+      value: data.activeCitizens,
       iconBg: 'bg-tertiary-fixed/20',
       iconColor: 'text-tertiary',
     },

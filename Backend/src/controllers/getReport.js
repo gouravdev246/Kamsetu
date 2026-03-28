@@ -42,4 +42,26 @@ const getReportById = async (req, res) => {
     }
 }
 
-module.exports = { allReport, getReportById };
+const getGlobalStats = async (req, res) => {
+    try {
+        const User = require("../models/user.model");
+        
+        const totalIssues = await Report.countDocuments({});
+        const resolvedIssues = await Report.countDocuments({ status: "Resolved" });
+        const activeCitizens = await User.countDocuments({});
+
+        return res.status(200).json({
+            success: true,
+            stats: {
+                totalIssues,
+                resolvedIssues,
+                activeCitizens
+            }
+        });
+    } catch (error) {
+        console.log("Stats Error", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+module.exports = { allReport, getReportById, getGlobalStats };

@@ -1,4 +1,4 @@
-const HeroSection = () => {
+const HeroSection = ({ setCurrentPage }) => {
   return (
     <section className="relative min-h-[870px] flex items-center px-6 overflow-hidden">
       {/* Background Image */}
@@ -24,11 +24,15 @@ const HeroSection = () => {
             Transparent, fast, and community-driven urban improvement.
           </p>
           <div className="flex flex-wrap gap-4 pt-4 animate-fade-in-up animation-delay-400">
-            <button className="bg-gradient-to-r from-primary to-primary-container text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all active:scale-95 flex items-center gap-2 hover:translate-y-[-2px] duration-300">
+            <button 
+              onClick={() => setCurrentPage('report')}
+              className="bg-gradient-to-r from-primary to-primary-container text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all active:scale-95 flex items-center gap-2 hover:translate-y-[-2px] duration-300">
               <span className="material-symbols-outlined">add_circle</span>
               Report Issue
             </button>
-            <button className="bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-full font-bold text-lg border border-white/20 hover:bg-white/20 transition-all active:scale-95 hover:translate-y-[-2px] duration-300">
+            <button 
+              onClick={() => setCurrentPage('leaderboard')}
+              className="bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-full font-bold text-lg border border-white/20 hover:bg-white/20 transition-all active:scale-95 hover:translate-y-[-2px] duration-300">
               View Leaderboard
             </button>
           </div>

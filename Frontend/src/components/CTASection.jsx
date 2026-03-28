@@ -1,4 +1,4 @@
-const CTASection = () => {
+const CTASection = ({ setCurrentPage }) => {
   return (
     <section className="max-w-7xl mx-auto px-6 py-24">
       <div className="bg-on-background rounded-[3rem] p-12 md:p-24 relative overflow-hidden flex flex-col items-center text-center group">
@@ -17,7 +17,9 @@ const CTASection = () => {
           Join thousands of citizens making our city cleaner, safer, and more
           efficient. It takes less than 60 seconds to file a report.
         </p>
-        <button className="bg-primary text-white px-10 py-5 rounded-full font-bold text-xl shadow-2xl hover:bg-primary-container transition-all active:scale-95 relative z-10 hover:translate-y-[-2px] hover:shadow-primary/30 duration-300">
+        <button 
+          onClick={() => setCurrentPage('report')}
+          className="bg-primary text-white px-10 py-5 rounded-full font-bold text-xl shadow-2xl hover:bg-primary-container transition-all active:scale-95 relative z-10 hover:translate-y-[-2px] hover:shadow-primary/30 duration-300">
           Submit a Report Now
         </button>
       </div>
