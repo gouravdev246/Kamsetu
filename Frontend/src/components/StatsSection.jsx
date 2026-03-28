@@ -48,7 +48,7 @@ const StatsSection = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/report/global-stats");
+        const response = await fetch("http://localhost:5000/api/report/global-stats");
         const json = await response.json();
         if (json.success) {
           setData(json.stats);

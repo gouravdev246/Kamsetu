@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const Navbar = ({ currentPage, setCurrentPage, user, admin }) => {
+const Navbar = ({ currentPage, setCurrentPage, user, admin, onUserLogout, onAdminLogout }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -69,24 +69,35 @@ const Navbar = ({ currentPage, setCurrentPage, user, admin }) => {
           </button>
           
           {/* Auth Display */}
-          <button 
-            onClick={() => {
-              if (!user && !admin) setCurrentPage('login');
-              // Optionally handle profile menu here
-            }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all active:scale-95 ${
-              (user || admin) 
-                ? 'bg-secondary-fixed/10 border-secondary-fixed text-secondary-fixed' 
-                : 'bg-on-surface/5 border-on-surface/10 text-on-surface-variant hover:bg-on-surface/10'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg">
-              {admin ? 'verified_user' : user ? 'person' : 'account_circle'}
-            </span>
-            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">
-              {admin ? 'Authority' : user ? user.name.split(' ')[0] : 'Authenticate'}
-            </span>
-          </button>
+          <div className="flex items-center gap-2">
+            {(user || admin) ? (
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${admin ? 'bg-secondary-fixed/10 border-secondary-fixed text-secondary-fixed' : 'bg-primary/5 border-primary/20 text-primary'}`}>
+                  <span className="material-symbols-outlined text-lg">
+                    {admin ? 'verified_user' : 'person'}
+                  </span>
+                  <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">
+                    {admin ? 'Authority' : user.name.split(' ')[0]}
+                  </span>
+                </div>
+                <button 
+                  onClick={admin ? onAdminLogout : onUserLogout}
+                  className="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center hover:bg-error/20 transition-all border border-error/10"
+                  title="Logout"
+                >
+                  <span className="material-symbols-outlined text-lg">logout</span>
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setCurrentPage('login')}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border bg-on-surface/5 border-on-surface/10 text-on-surface-variant hover:bg-on-surface/10 transition-all active:scale-95"
+              >
+                <span className="material-symbols-outlined text-lg">account_circle</span>
+                <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Authenticate</span>
+              </button>
+            )}
+          </div>
 
           {/* Mobile menu toggle */}
           <button

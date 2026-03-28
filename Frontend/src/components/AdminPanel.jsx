@@ -2,30 +2,20 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AdminAuth from './AdminAuth';
 
-const AdminPanel = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminData, setAdminData] = useState(null);
+const AdminPanel = ({ admin, onLogout }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check local storage for persistent login (simplified for now)
-    const storedAdmin = localStorage.getItem('kamsetu_admin');
-    if (storedAdmin) {
-      const data = JSON.parse(storedAdmin);
-      setAdminData(data);
-      setIsAdmin(true);
-      fetchReports(data.organisation);
-    } else {
-      setLoading(false);
+    if (admin) {
+      fetchReports(admin.organisation);
     }
-  }, []);
+  }, [admin]);
 
   const fetchReports = async (municipality) => {
     try {
       setLoading(true);
-      // Backend expects 'municipality' query param
       const response = await axios.get(`/api/report/all?municipality=${municipality}`);
       setReports(response.data.reports || []);
     } catch (err) {
@@ -33,13 +23,6 @@ const AdminPanel = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAuthSuccess = (admin) => {
-    setAdminData(admin);
-    setIsAdmin(true);
-    localStorage.setItem('kamsetu_admin', JSON.stringify(admin));
-    fetchReports(admin.organisation);
   };
 
   const handleStatusChange = async (reportId, newStatus) => {
@@ -52,17 +35,13 @@ const AdminPanel = () => {
     }
   };
 
-  if (!isAdmin) {
-    return <AdminAuth onAuthSuccess={handleAuthSuccess} />;
-  }
-
   return (
     <div className="min-h-screen bg-surface pt-32 pb-20 px-6 max-w-7xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <span className="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold uppercase tracking-widest rounded-full">
-              {adminData.organisation} Municipal Authority
+              {admin.organisation} Municipal Authority
             </span>
           </div>
           <h1 className="font-headline text-4xl font-extrabold tracking-tight">Active Reports</h1>
@@ -71,14 +50,14 @@ const AdminPanel = () => {
         
         <div className="flex items-center gap-4 bg-surface-container-low p-2 rounded-2xl border border-outline-variant/30 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center font-bold">
-            {adminData.name[0]}
+            {admin.name[0]}
           </div>
           <div className="pr-4">
-            <p className="text-xs font-bold leading-tight">{adminData.name}</p>
+            <p className="text-xs font-bold leading-tight">{admin.name}</p>
             <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter">Portal Admin</p>
           </div>
           <button 
-            onClick={() => { localStorage.removeItem('kamsetu_admin'); setIsAdmin(false); }}
+            onClick={onLogout}
             className="w-10 h-10 rounded-xl hover:bg-error/10 text-error transition-colors flex items-center justify-center"
             title="Logout"
           >

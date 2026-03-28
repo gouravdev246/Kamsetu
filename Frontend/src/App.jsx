@@ -16,17 +16,37 @@ import AdminAuth from './components/AdminAuth'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
-  const [user, setUser] = useState(null);
-  const [admin, setAdmin] = useState(null);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('kamsetu_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [admin, setAdmin] = useState(() => {
+    const saved = localStorage.getItem('kamsetu_admin');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   const handleUserAuth = (userData) => {
     setUser(userData);
+    localStorage.setItem('kamsetu_user', JSON.stringify(userData));
+    setCurrentPage('home');
+  };
+
+  const handleUserLogout = () => {
+    setUser(null);
+    localStorage.removeItem('kamsetu_user');
     setCurrentPage('home');
   };
 
   const handleAdminAuth = (adminData) => {
     setAdmin(adminData);
+    localStorage.setItem('kamsetu_admin', JSON.stringify(adminData));
     setCurrentPage('admin');
+  };
+
+  const handleAdminLogout = () => {
+    setAdmin(null);
+    localStorage.removeItem('kamsetu_admin');
+    setCurrentPage('home');
   };
 
   const renderPage = () => {
@@ -38,7 +58,7 @@ function App() {
       case 'contributors':
         return <TopContributors />;
       case 'admin':
-        return admin ? <AdminPanel admin={admin} /> : <AdminAuth onAuthSuccess={handleAdminAuth} />;
+        return admin ? <AdminPanel admin={admin} onLogout={handleAdminLogout} /> : <AdminAuth onAuthSuccess={handleAdminAuth} />;
       case 'login':
         return <UserAuth onAuthSuccess={handleUserAuth} />;
       default:
@@ -55,7 +75,14 @@ function App() {
 
   return (
     <div className="bg-surface font-body text-on-surface min-h-screen">
-      <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} user={user} admin={admin} />
+      <Navbar 
+        currentPage={currentPage} 
+        setCurrentPage={setCurrentPage} 
+        user={user} 
+        admin={admin} 
+        onUserLogout={handleUserLogout}
+        onAdminLogout={handleAdminLogout}
+      />
       {renderPage()}
       <Footer />
       <MobileNav currentPage={currentPage} setCurrentPage={setCurrentPage} user={user} admin={admin} />

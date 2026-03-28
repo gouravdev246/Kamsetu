@@ -6,7 +6,7 @@ const HeroSection = ({ setCurrentPage }) => {
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/report/all");
+        const response = await fetch("http://localhost:5000/api/report/all");
         const json = await response.json();
         if (json.reports) {
           // get latest 2
