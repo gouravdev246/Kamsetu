@@ -27,6 +27,7 @@ const createReport = async (req, res) => {
             description,
             category,
             municipality: municipality || "Unknown",
+            pinCode: pinCode || "000000",
             media: mediaUrl ? [mediaUrl] : [],
             location: {
                 address: location || address,
@@ -85,4 +86,43 @@ const updateReportStatus = async (req, res) => {
     }
 };
 
-module.exports = { createReport, updateReportStatus };
+const toggleUpvote = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required to upvote." });
+        }
+
+        const report = await Report.findById(id);
+        if (!report) {
+            return res.status(404).json({ message: "Report not found" });
+        }
+
+        const hasUpvoted = report.upvotes.includes(userId);
+
+        if (hasUpvoted) {
+            // Remove upvote
+            report.upvotes = report.upvotes.filter(uid => uid.toString() !== userId.toString());
+        } else {
+            // Add upvote
+            report.upvotes.push(userId);
+        }
+
+        await report.save();
+
+        return res.status(200).json({
+            message: hasUpvoted ? "Upvote removed" : "Upvote added",
+            upvotesCount: report.upvotes.length,
+            hasUpvoted: !hasUpvoted,
+            report
+        });
+
+    } catch (error) {
+        console.log("Upvote Error:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+module.exports = { createReport, updateReportStatus, toggleUpvote };

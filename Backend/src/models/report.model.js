@@ -30,6 +30,17 @@ const reportSchema = new mongoose.Schema(
             required: true,
             index: true,
         },
+        pinCode: {
+            type: String,
+            required: true,
+            index: true,
+        },
+        
+        // Upvoting Mechanism
+        upvotes: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        }],
         
         // Media (Images or Videos of the issue)
         media: [{

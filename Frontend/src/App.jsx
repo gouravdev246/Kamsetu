@@ -54,6 +54,8 @@ function App() {
     switch (currentPage) {
       case 'leaderboard':
         return <MunicipalityRanks />;
+      case 'issues':
+        return <RecentIssues user={user} standalone={true} />;
       case 'report':
         return <ReportIssue user={user} />;
       case 'contributors':
@@ -69,7 +71,7 @@ function App() {
           <main className="pt-20 pb-24 md:pb-0">
             <HeroSection user={user} setCurrentPage={setCurrentPage} />
             <StatsSection />
-            <RecentIssues />
+            <RecentIssues user={user} />
             <CTASection setCurrentPage={setCurrentPage} />
           </main>
         );

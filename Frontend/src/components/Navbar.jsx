@@ -15,6 +15,7 @@ const Navbar = ({ currentPage, setCurrentPage, user, admin, onUserLogout, onAdmi
   const navLinks = [
     { label: 'Home', id: 'home', href: '#' },
     { label: 'Report Issue', id: 'report', href: '#report' },
+    { label: 'Issues', id: 'issues', href: '#issues' },
     { label: 'Leaderboard', id: 'leaderboard', href: '#leaderboard' },
     { label: 'Contributors', id: 'contributors', href: '#contributors' },
     { label: 'Portal', id: 'admin', href: '#portal' },

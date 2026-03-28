@@ -3,14 +3,27 @@ const Report = require("../models/report.model");
 
 const allReport = async (req, res) => {
     try {
-        const { municipality } = req.query;
+        const { municipality, pinCode } = req.query;
         let query = {};
         
         if (municipality) {
             query.municipality = municipality;
         }
+        if (pinCode) {
+            query.pinCode = pinCode;
+        }
 
-        const reports = await Report.find(query).sort({ createdAt: -1 });
+        let reports = await Report.find(query).sort({ createdAt: -1 });
+        
+        // Sort highest upvotes first, then newest
+        reports = reports.sort((a, b) => {
+            const upvotesA = a.upvotes?.length || 0;
+            const upvotesB = b.upvotes?.length || 0;
+            if (upvotesB !== upvotesA) {
+                return upvotesB - upvotesA;
+            }
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
         return res.status(200).json({
             message: "Reports fetched successfully",
             reports,
