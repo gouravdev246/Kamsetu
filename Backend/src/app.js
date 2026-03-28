@@ -18,9 +18,11 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 const authRouter = require('./routes/auth.route');
 const reportRouter = require('./routes/report.router');
+const contactRouter = require('./routes/contact.route');
 
 app.use('/api/auth' , authRouter);
 app.use('/api/report', reportRouter);
+app.use('/api/contact', contactRouter);
 
 app.get('/', (req, res) => {
     res.send("Hellooooouuuuuuu")

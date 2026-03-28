@@ -14,6 +14,7 @@ import AdminPanel from './components/AdminPanel'
 import UserAuth from './components/UserAuth'
 import AdminAuth from './components/AdminAuth'
 import UserProfile from './components/UserProfile'
+import LocalAssistance from './components/LocalAssistance'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -66,6 +67,8 @@ function App() {
         return <UserAuth onAuthSuccess={handleUserAuth} />;
       case 'profile':
         return <UserProfile user={user} onLogout={handleUserLogout} setCurrentPage={setCurrentPage} />;
+      case 'assistance':
+        return <LocalAssistance />;
       default:
         return (
           <main className="pt-20 pb-24 md:pb-0">
