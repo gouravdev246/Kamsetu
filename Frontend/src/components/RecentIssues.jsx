@@ -64,10 +64,12 @@ const IssueCard = ({ issue, user, onUpvote }) => {
 const RecentIssues = ({ user, standalone }) => {
   const [issues, setIssues] = useState([]);
   const [pinCode, setPinCode] = useState('');
+  const [activePin, setActivePin] = useState('');
   const [loading, setLoading] = useState(true);
 
   const fetchIssues = async (pinFilter = '') => {
     setLoading(true);
+    setActivePin(pinFilter.trim());
     try {
       let url = "http://localhost:5000/api/report/all";
       if (pinFilter && pinFilter.trim().length > 0) {
@@ -170,6 +172,15 @@ const RecentIssues = ({ user, standalone }) => {
                 </button>
               )}
             </form>
+
+            {activePin && (
+              <div className="mt-6 flex items-center gap-2 animate-fade-in">
+                <div className="px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-bold border border-primary/20 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm">analytics</span>
+                  {issues.length} Active {issues.length === 1 ? 'Report' : 'Reports'} in {activePin}
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
