@@ -69,7 +69,7 @@ const SuccessModal = ({ reportId, onClose, onTrack }) => {
   );
 };
 
-const ReportIssue = () => {
+const ReportIssue = ({ user }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -77,13 +77,13 @@ const ReportIssue = () => {
   const [cameraError, setCameraError] = useState('');
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState('');
-  const [municipalities , setMunicipalities] = useState([])
+  const [municipalities, setMunicipalities] = useState([]);
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    pinCode: '',
-    municipality: '',
-    address: '',
+    fullName: user?.name || '',
+    phone: user?.phone || '',
+    pinCode: user?.pinCode || '',
+    municipality: user?.municipality || '',
+    address: user?.address || '',
     location: '',
     lat: null,
     lng: null,

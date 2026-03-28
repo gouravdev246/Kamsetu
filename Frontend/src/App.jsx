@@ -13,6 +13,7 @@ import TopContributors from './components/TopContributors'
 import AdminPanel from './components/AdminPanel'
 import UserAuth from './components/UserAuth'
 import AdminAuth from './components/AdminAuth'
+import UserProfile from './components/UserProfile'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -61,6 +62,8 @@ function App() {
         return admin ? <AdminPanel admin={admin} onLogout={handleAdminLogout} /> : <AdminAuth onAuthSuccess={handleAdminAuth} />;
       case 'login':
         return <UserAuth onAuthSuccess={handleUserAuth} />;
+      case 'profile':
+        return <UserProfile user={user} onLogout={handleUserLogout} setCurrentPage={setCurrentPage} />;
       default:
         return (
           <main className="pt-20 pb-24 md:pb-0">

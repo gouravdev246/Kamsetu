@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import axios from 'axios';
 
 const UserAuth = ({ onAuthSuccess }) => {
@@ -11,8 +11,34 @@ const UserAuth = ({ onAuthSuccess }) => {
     name: '',
     phone: '',
     password: '',
-    address: ''
+    address: '',
+    municipality: '',
+    pinCode: ''
   });
+  const [municipalities, setMunicipalities] = useState([]);
+
+  useEffect(() => {
+    if (regForm.pinCode.length !== 6) {
+      setMunicipalities([]);
+      return;
+    }
+
+    const fetchMunicipalities = async () => {
+      try {
+        const { data } = await axios.get(`https://api.postalpincode.in/pincode/${regForm.pinCode}`);
+        if (data?.[0]?.Status === 'Success' && data[0].PostOffice) {
+          setMunicipalities(data[0].PostOffice);
+        } else {
+          setMunicipalities([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch municipalities:', err);
+        setMunicipalities([]);
+      }
+    };
+
+    fetchMunicipalities();
+  }, [regForm.pinCode]);
 
   // Login State
   const [loginForm, setLoginForm] = useState({
@@ -150,6 +176,45 @@ const UserAuth = ({ onAuthSuccess }) => {
                   onChange={e => setRegForm({...regForm, password: e.target.value})}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">PIN Code</label>
+                <input 
+                  type="text" 
+                  className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl text-on-surface focus:ring-2 focus:ring-primary/20 transition-all"
+                  placeholder="123456"
+                  value={regForm.pinCode}
+                  onChange={e => setRegForm({...regForm, pinCode: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Municipality</label>
+                {municipalities.length > 0 ? (
+                  <select 
+                    className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl text-on-surface focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                    value={regForm.municipality}
+                    onChange={e => setRegForm({...regForm, municipality: e.target.value})}
+                    required
+                  >
+                    <option value="" disabled>Select Municipality</option>
+                    {municipalities
+                      .filter((item, index, self) => 
+                        item.Block && self.findIndex(i => i.Block === item.Block) === index
+                      )
+                      .map((item, index) => (
+                        <option key={index} value={item.Block}>
+                          {item.Block}
+                        </option>
+                      ))}
+                  </select>
+                ) : (
+                  <div className="w-full px-5 py-4 bg-surface-dim/40 rounded-2xl text-on-surface-variant flex items-center justify-between">
+                    <span className="text-sm font-semibold italic">
+                      {regForm.pinCode.length >= 3 ? 'Fetching...' : 'Enter PIN first'}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Current Address (Optional)</label>

@@ -64,4 +64,18 @@ const getGlobalStats = async (req, res) => {
     }
 }
 
-module.exports = { allReport, getReportById, getGlobalStats };
+const getReportsByUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const reports = await Report.find({ user: userId }).sort({ createdAt: -1 });
+        return res.status(200).json({
+            message: "User reports fetched successfully",
+            reports,
+        });
+    } catch (error) {
+        console.log("Error", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+module.exports = { allReport, getReportById, getGlobalStats, getReportsByUser };

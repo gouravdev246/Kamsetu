@@ -72,7 +72,10 @@ const Navbar = ({ currentPage, setCurrentPage, user, admin, onUserLogout, onAdmi
           <div className="flex items-center gap-2">
             {(user || admin) ? (
               <div className="flex items-center gap-2">
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${admin ? 'bg-secondary-fixed/10 border-secondary-fixed text-secondary-fixed' : 'bg-primary/5 border-primary/20 text-primary'}`}>
+                <div 
+                  onClick={() => setCurrentPage('profile')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer hover:shadow-md transition-all ${admin ? 'bg-secondary-fixed/10 border-secondary-fixed text-secondary-fixed' : 'bg-primary/5 border-primary/20 text-primary'}`}
+                >
                   <span className="material-symbols-outlined text-lg">
                     {admin ? 'verified_user' : 'person'}
                   </span>

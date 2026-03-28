@@ -147,8 +147,12 @@ const User = require('../models/user.model');
 
 const registerUser = async (req, res) => {
     try {
-        const { name, phone, password, address } = req.body;
+        const { name, phone, password, address, municipality, pinCode } = req.body;
         
+        if (!municipality || !pinCode) {
+            return res.status(400).json({ message: "Municipality and PIN code are required" });
+        }
+
         const existingUser = await User.findOne({ phone });
         if (existingUser) {
             return res.status(400).json({ message: "Mobile number already registered" });
@@ -160,7 +164,9 @@ const registerUser = async (req, res) => {
             name,
             phone,
             password: hashedPassword,
-            address
+            address,
+            municipality,
+            pinCode
         });
         
         const token = jwt.sign({
